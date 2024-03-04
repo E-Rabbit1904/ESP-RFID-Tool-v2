@@ -8,11 +8,16 @@ const char HelpText[] PROGMEM = R"=====(
 HELP<br>
 -----<br>
 <br>
-ESP-RFID-Tool<br>
+ESP-RFID-Tool v2<br>
+This is ESP-RFID-Tool-v2. It's Raik Schneider's aka Einstein2150's fork of the original software from Corey Harding.<br>
+ ESP-RFID-Tool-v2 uses a normal nodemcuv3 board which is more comfortable in flashing and debugging because the is a usb-interface and the ch340g communication-chip onboard which doesn't
+ require a separate flashing device like a serial-converter.<br>
+ The Fork is 100% compatible with the original ESP-RFID-Board designed by Corey Harding<br>
 <br>
-Created by Corey Harding<br>
+<a href="https://github.com/Einstein2150/ESP-RFID-Tool-v2">https://github.com/Einstein2150/ESP-RFID-Tool-v2</a> - See Link for Updated Firmware or for more detailed Help<br>
+<br>
+Original created by Corey Harding<br>
 www.LegacySecurityGroup.com / www.Exploit.Agency<br>
-<a href="https://github.com/rfidtool/ESP-RFID-Tool">https://github.com/rfidtool/ESP-RFID-Tool</a> - See Link for Updated Firmware or for more detailed Help<br>
 <br>
 The ESP-RFID-Tool is a tool created for logging Wiegand data and also for testing devices that contain a Wiegand Interface.  The primary target group is 26-37bit HID Cards but it will also work with most devices that output Wiegand data.  ESP-RFID-Tool can be combined with a RFID reader and a battery to create a portable standalone RFID badge logger, it can also be integrated into existing systems without the need for a battery and instead drawing its power directly from the wiring in the existing installation. The ESP-RFID-Tool can read the data from any device that contains a Wiegand Interface and outputs data from 1 bit long up to 4,096 bits long, although anything other than 26-37bit is experimental.  The ESP-RFID-Tool is not even limited to RFID technologies, many other devices also contain a Wiegand Interface as it is an access control system standard, this includes pin pads(keypad), magnetic stripe(magstripe), there are even non access control related devices that utilize a Wiegand Interface.<br>
 <br>

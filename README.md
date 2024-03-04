@@ -1,5 +1,7 @@
-# ESP-RFID-Tool  
-By Corey Harding  
+# ESP-RFID-Tool-v2 
+Forked by Raik Schneider aka Einstein2150
+
+Original Software by Corey Harding  
   
 ![Logo](Images/logo.png?raw=true)  
   
@@ -7,30 +9,27 @@ Official website:
 * www.rfid-tool.com  
   
 ![Board](Images/board.jpg?raw=true)  
-April Brother is currently manufacturing this hardware and it can be purchased direct from China from their  
-* Official Store: https://blog.aprbrother.com/product/esp-rfid-tool  
-* AliExpress Store: https://www.aliexpress.com/item/ESP-RFID-Tool/32850151497.html  
-* Tindie Store: https://www.tindie.com/products/aprbrother/esp-rfid-tool/    
   
-Third Party Distributors:  
-* Hacker Warehouse(USA): https://hackerwarehouse.com/product/esp-rfid-tool/  
-  
-Video Demos of Capturing Credentials using various technologies that utilize a Wiegand Interface:  
-* Performing a REPLAY ATTACK using the Experimental TX feature: https://youtu.be/u1y7UZpup9I  
-* Brute forcing PIN codes using the Experimental TX feature: https://youtu.be/OZCaypGBVv4  
-* Portable HID 5375 Long Range RFID Reader: https://youtu.be/B86926CHImE  
-* HID 5355 RFID/Keypad Reader: https://youtu.be/ojIpcY8Y3KQ  
-* HID multiCLASS RM40 RFID/Magstripe Reader: https://youtu.be/9OccRaLxXg8  
-* HID multiCLASS RFID Reader: https://youtu.be/2sCLkpuxAks  
-* RFID/Biometric/Keypad with Electronic Deadbolt: https://youtu.be/0o8r_ufRrFo  
-  
-Firmware:  
-* Official  
-  * ESP-RFID-Tool: https://github.com/rfidtool/ESP-RFID-Tool/releases  
-    * Releases >=1.1.0 are compiled with esp8266 board manager package 2.4.1  
-    * Releases < 1.1.0 are compiled with esp8266 board manager package 2.3.0  
-* Unofficial  
-  * Port of Tastic RFID Thief: https://github.com/exploitagency/ESP-RFID-Thief/releases  
+Firmware-v2:
+
+  * ESP-RFID-Tool-v2: https://github.com/Einstein2150/ESP-RFID-Tool-v2/releases  
+  * Releases are compiled with esp8266 board manager package 2.4.0  
+ 
+## Differences between the original and this fork  
+* better replay
+  * MOSFET's ground the DATA-lines while **replaying data more stable than the original board** can do
+* Hex-Magic in captured data
+  * the captured data-analysing is improved because the original firmware builds the HEX in the logfile with the unnecessary Wiegand control-bits
+  * the logfile now lists the **cleaned HEX of the card** (free of control bits-data)
+  * for **RFID-cards the UID is calculated** and printed in the log. This makes the creation of clonecards more easy
+
+## schematic and wiring for board-v2 (based on nodemcu)  
+* board-v2 could be easily build by yourself
+* it has an additional voltage regulator for higher voltage
+* board-v2 uses 2 MOSFET (i.e. 2N7000) for replay-attacks which makes the ability of stronger comunication because the Wiegand datalines get strong grounded
+*  you can use the ESP-RFID-Tool-v2 firmware on the original board from Corey Harding but it wouldn't have the improvements because they relie on additional hardware
+ 
+![Board](Images/RFID-Tool-v2_wiring.png?raw=true) 
   
 ## Intended use cases  
 * Security researchers performing red team assessments.  
@@ -84,12 +83,19 @@ The device was made with minimal hardware to keep costs extremely low and in rea
 [Magstripe/ABA Format](Magstripe/README.md)  
   
 ## Flashing Firmware  
-OPTION 1: OTA via the Web Interface:  
-* Download one of the latest releases from  
-  * https://github.com/rfidtool/ESP-RFID-Tool/releases  
-* Login to the device's admin panel and upgrade the firmware.  
+OPTION 1: OTA via the Web Interface:
   
-OPTION 2: Arduino IDE:  
+* Download one of the latest releases from  
+  * hhttps://github.com/Einstein2150/ESP-RFID-Tool-v2/releases  
+* Login to the device's admin panel and upgrade the firmware.  
+
+OPTION 2: ESPWebTool:
+
+* Download the firmware-bin from the release-page
+* use a webtool like https://esp.huhn.me/
+  
+OPTION 3: Arduino IDE: 
+ 
 * Use the ESP Flasher R4 by April Brother:  
   * https://blog.aprbrother.com/product/esp-flasher-r4  
 * Clone/download the source.  
@@ -179,24 +185,20 @@ Select "Browse" choose the new firmware to be uploaded and then click "Upgrade".
   
 You will need to manually reset the device upon the browser alerting you that the upgrade was successful.  
   
-#### Jumpers  
-    
-* J1: Bridge to reset the board(your FTDI doesn't have a reset button?)  
-* J2: Cut the trace to disable DTR pin after programming then use it as an additional IO(continue updating firmware via web interface)  
-* J3: Bridge this during a power cycle to restore default configuration without losing your log files.  
+#### Reset  
+      
+* GPIO 4 / D2: Ground this during a power cycle to restore default configuration without losing your log files.  
   
 #### Restore Default Settings  
     
 * Option 1: Go to settings under web interface and choose restore default configuration.  
-* Option 2: Bridge J3 before booting the device. (Either before powering on or bridge it and reset the device)   
+* Option 2: Ground GPIO 4 / D2 before booting the device. (Either before powering on or bridge it and reset the device)   
 * Option 3: Connect via serial(9600 baud) and send the command "ResetDefaultConfig:" without quotes.  
   
-## History
-I pushed the design for the original prototype to GitHub back in September of 2016 albeit under a different repo. I was using an Adafruit Feather Huzzah running some code that I had modified porting the Tastic RFID Thief(by Fran Brown from Bishop Fox) to the ESP12S chip. At the time no sort of Wiegand logger existed offering WiFi capabilities and providing an easy to use web interface for accessing the log files.(I could not find one so I created it) During the second evolution of the project I decided to design dedicated hardware and I lightly upgraded the software. It was open source hardware and it was out there on GitHub but still not easily available to the masses. Not everyone is confident in surface mount soldering and even for me it was time consuming assembling boards for personal use. It was then that I realized there is a need for an affordable device like mine to be mass produced so anyone that has a legitimate for need one can have access to it. During the third stage I redesigned both the software and the hardware and decided to contact April Brother to see about them manufacturing it and selling it for a fair price. That is when ESP-RFID-Tool was born.  
   
 ## Licensing Information  
     
-Created by Corey Harding  
+This software was originally created by Corey Harding  
 https://github.com/rfidtool/ESP-RFID-Tool  
 ESP-RFID-Tool software is licensed under the MIT License  
   
@@ -229,3 +231,7 @@ ESP-RFID-Tool software is licensed under the MIT License
 ##### aba-decode.py  
 * No License Specified  
   * Andrew MacPherson(andrewmohawk)  
+
+##### hexmagic.h  
+* Custom License(see file)  
+  * Copyright (c) 2024 Raik Schneider aka Einstein2150 
