@@ -5,20 +5,18 @@ Original Software by Corey Harding
   
 ![Logo](Images/logo.png?raw=true)  
   
-Official website:  
-* www.rfid-tool.com  
-  
-![Board](Images/board.jpg?raw=true)  
-  
-Firmware-v2:
-
   * ESP-RFID-Tool-v2: https://github.com/Einstein2150/ESP-RFID-Tool-v2/releases  
   * Releases are compiled with esp8266 board manager package 2.4.0  
  
-## Differences between the original and this fork  
-* better replay
+## improved features compared to the original version 
+
+### better replay
   * MOSFET's ground the DATA-lines while **replaying data more stable than the original board** can do
-* Hex-Magic in captured data
+
+### Wiring status page  
+  * you can **check the wiring** on the status-page
+  
+### Hex-Magic in captured data
   * the captured data-analysing is improved because the original firmware builds the HEX in the logfile with the unnecessary Wiegand control-bits
   * the logfile now lists the **cleaned HEX of the card** (free of control bits-data)
   * for **RFID-cards the UID is calculated** and printed in the log. This makes the creation of clonecards more easy
@@ -27,7 +25,16 @@ Firmware-v2:
 * board-v2 could be easily build by yourself
 * it has an additional voltage regulator for higher voltage
 * board-v2 uses 2 MOSFET (i.e. 2N7000) for replay-attacks which makes the ability of stronger comunication because the Wiegand datalines get strong grounded
-*  you can use the ESP-RFID-Tool-v2 firmware on the original board from Corey Harding but it wouldn't have the improvements because they relie on additional hardware
+*  you can use the ESP-RFID-Tool-v2 firmware on the original board from Corey Harding but it wouldn't have the improvements because they relie on additional hardware.
+
+This is the preferred board design with uses a 7805 5V voltage regulator for feeding the esp by the vin-pin which is regulated by the nodemcu-own voltage regulator to 3.3V which should be safe until 25V:
+![Board](Images/RFID-Tool-v2_wiring_alt.png?raw=true)
+
+Alternative:
+
+If you know your voltage ratings you can use a 3.3 voltage regulator like the 1117 too but it should not be more than 15V.
+
+You are always free to power the nodemcu natively by the VIN-pin but be sure not to exceed 9V for the nodemcu:
  
 ![Board](Images/RFID-Tool-v2_wiring.png?raw=true) 
   

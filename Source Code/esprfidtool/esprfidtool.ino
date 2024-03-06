@@ -512,27 +512,27 @@ void LogWiegand(WiegandNG &tempwg) {
     Serial.println(cardChunk2, HEX);
   
     cardChunkConcat = String(cardChunk1, HEX) + String(cardChunk2, HEX); //concat the two hex-chunks to one bin
-    Serial.print("cardChunkConcatString: ");
-    Serial.println(cardChunkConcat);
+    //Serial.print("cardChunkConcatString: ");
+    //Serial.println(cardChunkConcat);
 
     cardChunkConcat = hexToBinary(cardChunkConcat);
-    Serial.print("cardChunkConcatString2BIN: ");
-    Serial.println(cardChunkConcat);
+    //Serial.print("cardChunkConcatString2BIN: ");
+    //Serial.println(cardChunkConcat);
 
     cardChunkConcat = cardChunkConcat.substring(7, cardChunkConcat.length() - 1);
-    Serial.print("cardChunkConcatString2BIN-Cutted: ");
-    Serial.println(cardChunkConcat);
+    //Serial.print("cardChunkConcatString2BIN-Cutted: ");
+    //Serial.println(cardChunkConcat);
 
     cardChunkConcat = binaryToHex(cardChunkConcat);
-    Serial.print("cardChunkConcat-reHEXed: ");
-    Serial.println(cardChunkConcat);
+    //Serial.print("cardChunkConcat-reHEXed: ");
+    //Serial.println(cardChunkConcat);
     f.print(",Clean-HEX:");
     f.print(cardChunkConcat);
     
     cardChunkConcat = reverseHex(cardChunkConcat);
-    Serial.print("Card-UID: ");
-    Serial.println(cardChunkConcat);
-    Serial.println();
+    //Serial.print("Card-UID: ");
+    //Serial.println(cardChunkConcat);
+    //Serial.println();
     f.print(", Card-UID:");
     f.println(cardChunkConcat);
    
@@ -1135,6 +1135,7 @@ void setup() {
     "-----<br>"
     "File System Info Calculated in Bytes<br>"
     "<b>Total:</b> ")+total+" <b>Free:</b> "+freespace+" "+" <b>Used:</b> "+used+F("<br>-----<br>"
+    "<a href=\"/status\">Check Wiring Status</a><br>-<br>"
     "<a href=\"/logs\">List Exfiltrated Data</a><br>-<br>"
     "<a href=\"/experimental\">Experimental TX Mode</a><br>-<br>"
     "<a href=\"/data-convert\">Data Conversion Tools</a><br>-<br>"
@@ -1150,6 +1151,42 @@ void setup() {
     if (!RawFile(server.uri()))
       server.send(404, "text/plain", F("Error 404 File Not Found"));
   });
+
+
+  server.on("/status", []() {
+    wg.pause();
+    String DATA0_stat = "";
+    String DATA1_stat = "";
+    int DATA0_val = digitalRead(DATA0);
+    int DATA1_val = digitalRead(DATA1);
+    pinMode(DATA0, INPUT);
+    pinMode(DATA0_MOS, INPUT);
+    pinMode(DATA1, INPUT);
+    pinMode(DATA1_MOS, INPUT);
+    wg.clear();
+
+    if(DATA0_val==1) {DATA0_stat = "connected";} else {DATA0_stat = "NOT connected - check wiring!";}
+    if(DATA1_val==1) {DATA1_stat = "connected";} else {DATA1_stat = "NOT connected - check wiring!";}   
+     
+    server.send(200, "text/html", String()+F(
+        "<!DOCTYPE HTML>"
+        "<html>"
+        "<head>"
+        "<meta name = \"viewport\" content = \"width = device-width, initial-scale = 1.0, maximum-scale = 1.0, user-scalable=0\">"
+        "<title>ESP-RFID-Tool-v2 Wiegand-GPIO-Status</title>"
+        "<style>"
+        "\"body { background-color: #808080; font-family: Arial, Helvetica, Sans-Serif; Color: #000000; }\""
+        "</style>"
+        "</head>"
+        "<body>"
+        "<a href=\"/\"><- BACK TO INDEX</a><br>"
+        "<br>"
+        "<p>Wiegand-GPIO-status:</p>"
+        "DATA0 (Green) at D5: <strong>")+DATA0_stat+F("</strong><br>"
+        "DATA1 (White) at D6: <strong>")+DATA1_stat+F("</strong><br>"
+        "</body></html>"));
+  });
+  
   server.on("/settings", handleSettings);
 
   server.on("/firmware", [](){
@@ -1643,7 +1680,7 @@ void setup() {
 
     if (server.hasArg("binHTML")) {
       String binHTML=server.arg("binHTML");
-      wg.pause();
+      
       digitalWrite(DATA0, HIGH);
       digitalWrite(DATA0_MOS, LOW);
       pinMode(DATA0,OUTPUT);
@@ -2045,82 +2082,3 @@ void loop()
   }
 
 }
-
-/*
-String hexToBinary(String hexString) {
-  String binaryString = "";
-  
-  // Durchlaufe den Hex-String und konvertiere jeden Hex-Wert in Binär
-  for (int i = 0; i < hexString.length(); i++) {
-    char hexChar = hexString.charAt(i);
-    int hexValue;
-    
-    // Konvertiere Hex-Zeichen in Dezimalzahl
-    if (hexChar >= '0' && hexChar <= '9') {
-      hexValue = hexChar - '0';
-    } else if (hexChar >= 'A' && hexChar <= 'F') {
-      hexValue = hexChar - 'A' + 10;
-    } else if (hexChar >= 'a' && hexChar <= 'f') {
-      hexValue = hexChar - 'a' + 10;
-    } else {
-      // Ungültiges Hex-Zeichen
-      continue;
-    }
-    
-    // Konvertiere Dezimalzahl in 4-Bit-Binärzahl
-    for (int j = 3; j >= 0; j--) {
-      binaryString += (hexValue & (1 << j)) ? '1' : '0';
-    }
-  }
-  
-  return binaryString;
-}
-
-
-String binaryToHex(String binaryString) {
-  String hexString = "";
-  
-  // Stelle sicher, dass die Länge des Binär-Strings durch 4 teilbar ist
-  int padding = binaryString.length() % 4;
-  if (padding > 0) {
-    binaryString = String("0000").substring(0, 4 - padding) + binaryString;
-  }
-
-  // Durchlaufe den Binär-String und konvertiere jeden 4-Bit-Binärwert in Hex
-  for (int i = 0; i < binaryString.length(); i += 4) {
-    String binarySubstring = binaryString.substring(i, i + 4);
-    int hexValue = 0;
-
-    // Konvertiere 4-Bit-Binärzahl in Dezimalzahl
-    for (int j = 0; j < 4; j++) {
-      hexValue = (hexValue << 1) | (binarySubstring.charAt(j) - '0');
-    }
-
-    // Konvertiere Dezimalzahl in Hex-Zeichen
-    char hexChar = (hexValue < 10) ? ('0' + hexValue) : ('A' + hexValue - 10);
-
-    hexString += hexChar;
-  }
-  
-  return hexString;
-}
-
-
-String reverseHex(String hexString) {
-  // Überprüfe, ob der Hex-String gerade ist
-  if (hexString.length() % 2 != 0) {
-    // Wenn der Hex-String ungerade ist, füge eine führende Null hinzu
-    hexString = "0" + hexString;
-  }
-
-  String reversedHex = "";
-
-  // Durchlaufe den Hex-String rückwärts in 2er-Schritten
-  for (int i = hexString.length() - 2; i >= 0; i -= 2) {
-    // Extrahiere ein 2-Zeichen-Paar und füge es zum umgekehrten Hex-Wert hinzu
-    reversedHex += hexString.substring(i, i + 2);
-  }
-
-  return reversedHex;
-}
-*/
