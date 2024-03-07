@@ -10,11 +10,18 @@ Original Software by Corey Harding
  
 ## improved features compared to the original version 
 
+### UI 2.0
+  * modern user interface
+  * optimised for mobile devices (i.e. bigger buttons than small textlinks)
+
 ### better replay
   * MOSFET's ground the DATA-lines while **replaying data more stable than the original board** can do
 
-### Wiring status page  
-  * you can **check the wiring** on the status-page
+### Status page  
+  * new status-page with useful informations:
+   * 	Wiegand-wiring-check
+   *   Device Uptime
+   *   Memory informations
   
 ### Hex-Magic in captured data
   * the captured data-analysing is improved because the original firmware builds the HEX in the logfile with the unnecessary Wiegand control-bits

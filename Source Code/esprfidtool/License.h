@@ -1,9 +1,29 @@
+//CSS has to set manually here ...
+
 const char License[] PROGMEM = R"=====(
 <!DOCTYPE HTML>
-<html>
-<head><title>ESP-RFID-Tool-v2 Licensing Page</title></head>
+<head>
+<meta charset=\"UTF-8\">
+<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
+<style>
+body {
+font-family: 'Arial', sans-serif;
+font-size: 16px;
+background-color: #f0f0f0;
+color: #333;
+}
+button {
+width: 80%;
+height: 40px;
+display: block;
+margin: 10 px auto;
+font-size: 16px;
+}
+</style>
+<title>ESP-RFID-Tool-v2 Licensing Page</title>
+</head>
 <body>
-<a href="/"><- BACK TO INDEX</a><br><br>
+<button onclick="window.location.href='/'"><- BACK TO INDEX</button><br>
 <pre>
 
 This is ESP-RFID-Tool-v2. It's Raik Schneider's aka Einstein2150's fork of the original software from Corey Harding:

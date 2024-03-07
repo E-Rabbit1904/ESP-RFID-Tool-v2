@@ -1,12 +1,31 @@
+//CSS has to set manually here ...
+
 const char HelpText[] PROGMEM = R"=====(
 <!DOCTYPE HTML>
-<html>
-<head><title>ESP-RFID-Tool Help Page</title></head>
+<head>
+<meta charset=\"UTF-8\">
+<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
+<style>
+body {
+font-family: 'Arial', sans-serif;
+font-size: 16px;
+background-color: #f0f0f0;
+color: #333;
+}
+button {
+width: 80%;
+height: 40px;
+display: block;
+margin: 10 px auto;
+font-size: 16px;
+}
+</style>
+<title>ESP-RFID-Tool-v2 Help Page</title>
+</head>
 <body>
-<a href="/"><- BACK TO INDEX</a><br><br>
------<br>
-HELP<br>
------<br>
+<button onclick="window.location.href='/'"><- BACK TO INDEX</button><br>
+<br>
+<h1>Help Page</h1>
 <br>
 ESP-RFID-Tool v2<br>
 This is ESP-RFID-Tool-v2. It's Raik Schneider's aka Einstein2150's fork of the original software from Corey Harding.<br>
@@ -23,16 +42,14 @@ The ESP-RFID-Tool is a tool created for logging Wiegand data and also for testin
 <br>
 The ESP-RFID-Tool software is distributed under the MIT License. The license and copyright notice can not be removed and must be distributed alongside all future copies of the software.<br>
 <br>
------<br>
-Accessing ESP-RFID-Tool Web Interface<br>
------<br>
+<br>
+<h2>Accessing ESP-RFID-Tool Web Interface</h2>
 <br>
 SSID: "ESP-RFID-Tool"<br>
 URL:  http://192.168.1.1<br>
 <br>
------<br>
-Configure ESP-RFID-Tool<br>
------<br>
+<br>
+<h2>Configure ESP-RFID-Tool</h2>
 <br>
 Default credentials to access the configuration page:<br>
 Username: "admin"<br>
@@ -42,7 +59,7 @@ Default credentials for ftp server:<br>
 Username: "ftp-admin"<br>
 Password: "rfidtool"<br>
 <br>
-WiFi Configuration:<br>
+<h3>WiFi Configuration:</h3>
 <br>
 Network Type:<br>
 Access Point Mode: Create a standalone access point(No Internet Connectivity-Requires Close Proximity)<br>
@@ -58,12 +75,12 @@ IP: IP to set for device<br>
 Gateway: Gateway to use, make it the same as ESP-RFID-Tool's IP if an access point or the same as the router if joining a network<br>
 Subnet: Typically set to 255.255.255.0<br>
 <br>
-Web Interface Administration Settings:<br>
+<h3>Web Interface Administration Settings:</h3>
 <br>
 Username: Username to configure/upgrade ESP-RFID-Tool<br>
 Password: Password to configure/upgrade ESP-RFID-Tool<br>
 <br>
-FTP Server Settings:<br>
+<h3>FTP Server Settings:</h3>
 <br>
 Note: Supports Passive(PASV) Mode Only!<br>
 Enabled: Turn FTP Server ON<br>
@@ -71,33 +88,31 @@ Disabled: Turn FTP Server OFF<br>
 Username: Username to login to ftp server<br>
 Password: Password to login to ftp server<br>
 <br>
-Power LED:<br>
+<h3>Power LED:</h3>
 <br>
 Enabled: Turn ON Power LED<br>
 Disabled: Turn OFF Power LED<br>
 <br>
-RFID Capture Log:<br>
+<h3>RFID Capture Log:</h3>
 <br>
 Useful to change this value to differentiate between facilities during various security assessments.<br>
 File Name: File name to save captured RFID tags to for the current security assessment.<br>
 <br>
------<br>
-List Exfiltrated Data<br>
------<br>
+<br>
+<h2>List Exfiltrated Data</h2>
+
 <br>
 Displays all log files containing RFID tag captures.<br>
 <br>
------<br>
-Format File System<br>
------<br>
+<br>
+<h2>Format File System</h2>
 <br>
 This will erase the contents of the SPIFFS file system including ALL RFID tag captures.<br>
 Formatting may take up to 90 seconds.<br>
 All current settings will be retained unless you reboot your device during this process.<br>
 <br>
------<br>
-Upgrade ESP-RFID-Tool Firmware<br>
------<br>
+<br>
+<h2>Upgrade ESP-RFID-Tool Firmware</h2>
 <br>
 Authenticate using your username and password set in the configuration page.<br>
 <br>
@@ -109,9 +124,8 @@ Select "Browse" choose the new firmware to be uploaded and then click "Upgrade".
 <br>
 You will need to manually reset the device upon the browser alerting you that the upgrade was successful.<br>
 <br>
------<br>
-Licensing Information<br>
------<br>
+<br>
+<h2>Licensing Information</h2>
 <br>
 Created by Corey Harding<br>
 https://github.com/rfidtool/ESP-RFID-Tool<br>
