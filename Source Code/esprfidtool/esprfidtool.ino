@@ -403,13 +403,14 @@ void LogWiegand(WiegandNG &tempwg) {
   File f = SPIFFS.open("/"+String(logname), "a"); //Open the log in append mode to store capture
   int preambleLen;
   if (unknown==true && countedBits!=4 && countedBits!=8 && countedBits!=248) {
+    f.println();
     f.print(F("Unknown "));
     preambleLen=0;
   }
   else {
     preambleLen=(44-countedBits);
   }
-  
+  f.println();
   f.print(String()+countedBits+F(" bit card,"));
 
   if (countedBits==4||countedBits==8) {
@@ -509,7 +510,7 @@ void LogWiegand(WiegandNG &tempwg) {
       Serial.print(cardChunk1, HEX);
     }
     //f.print(" "); //debug line
-    f.print(cardChunk2, HEX);
+    f.println(cardChunk2, HEX);
     Serial.println(cardChunk2, HEX);
   
     cardChunkConcat = String(cardChunk1, HEX) + String(cardChunk2, HEX); //concat the two hex-chunks to one bin
@@ -520,6 +521,8 @@ void LogWiegand(WiegandNG &tempwg) {
     //Serial.print("cardChunkConcatString2BIN: ");
     //Serial.println(cardChunkConcat);
 
+    String cardBinReplay = cardChunkConcat.substring(6, cardChunkConcat.length());
+
     cardChunkConcat = cardChunkConcat.substring(7, cardChunkConcat.length() - 1);
     //Serial.print("cardChunkConcatString2BIN-Cutted: ");
     //Serial.println(cardChunkConcat);
@@ -527,7 +530,7 @@ void LogWiegand(WiegandNG &tempwg) {
     cardChunkConcat = binaryToHex(cardChunkConcat);
     //Serial.print("cardChunkConcat-reHEXed: ");
     //Serial.println(cardChunkConcat);
-    f.print(",Clean-HEX:");
+    f.print("--> Clean-HEX:");
     f.print(cardChunkConcat);
     
     cardChunkConcat = reverseHex(cardChunkConcat);
@@ -535,8 +538,11 @@ void LogWiegand(WiegandNG &tempwg) {
     //Serial.println(cardChunkConcat);
     //Serial.println();
     f.print(", Card-UID:");
-    f.println(cardChunkConcat);
-   
+    f.print(cardChunkConcat);
+    f.print("<button onclick=\"window.location.href='/api/tx/bin?binary=");
+    f.print(cardBinReplay);
+    f.print("&pulsewidth=40&interval=2000&wait=100000&prettify=1'\" style=\"width: 200px; height: 25px;\" >Replay</button>");
+    //f.println("");
   }
   else if (countedBits==4||countedBits==8) {
     f.print(",Keypad Code:");
@@ -596,9 +602,22 @@ void LogWiegand(WiegandNG &tempwg) {
       char hexCHAR[3];
       sprintf(hexCHAR, "%02X", binChunk1);
       f.println(hexCHAR);
+
+    f.print("<button onclick=\"window.location.href='/api/tx/bin?binary=");
+    f.print(hexToBinary(hexCHAR));
+    f.print("&pulsewidth=40&interval=2000&wait=100000&prettify=1'\" style=\"width: 200px; height: 25px;\" >Replay</button>");
+    //f.println("");
+      
     }
     else if (countedBits==4) {
       f.println(binChunk1, HEX);
+
+    String keyHex = String(binChunk1, HEX);
+    f.print("<button onclick=\"window.location.href='/api/tx/bin?binary=");
+    f.print(hexToBinary(keyHex));
+    f.print("&pulsewidth=40&interval=2000&wait=100000&prettify=1'\" style=\"width: 200px; height: 25px;\" >Replay</button>");
+    //f.println("");
+      
     }
   }
   else if (countedBits==248) {
@@ -750,12 +769,12 @@ void settingsPage()
   "<b>Experimental Settings:</b><br>"
   "<small>Changes require a reboot.</small><br>"
   "<small>Default Buffer Length is 256 bits with an allowed range of 52-4096 bits."
-  "<br>Default Experimental TX mode timing is 40us Wiegand Data Pulse Width and a 2ms Wiegand Data Interval with an allowed range of 0-1000."
+  "<br>Default TX mode timing is 40us Wiegand Data Pulse Width and a 2ms Wiegand Data Interval with an allowed range of 0-1000."
   "<br>Changing these settings may result in unstable performance.</small><br>"
   "Wiegand RX Buffer Length: <input type=\"number\" name=\"bufferlength\" value=\"")+bufferlength+F("\" maxlength=\"30\" size=\"31\" min=\"52\" max=\"4096\"> bit(s)<br>"
   "Wiegand RX Packet Length: <input type=\"number\" name=\"rxpacketgap\" value=\"")+rxpacketgap+F("\" maxlength=\"30\" size=\"31\" min=\"1\" max=\"4096\"> millisecond(s)<br>"
-  "Experimental TX Wiegand Data Pulse Width: <input type=\"number\" name=\"txdelayus\" value=\"")+txdelayus+F("\" maxlength=\"30\" size=\"31\" min=\"0\" max=\"1000\"> microsecond(s)<br>"
-  "Experimental TX Wiegand Data Interval: <input type=\"number\" name=\"txdelayms\" value=\"")+txdelayms+F("\" maxlength=\"30\" size=\"31\" min=\"0\" max=\"1000\"> millisecond(s)<br>"
+  "TX Wiegand Data Pulse Width: <input type=\"number\" name=\"txdelayus\" value=\"")+txdelayus+F("\" maxlength=\"30\" size=\"31\" min=\"0\" max=\"1000\"> microsecond(s)<br>"
+  "TX Wiegand Data Interval: <input type=\"number\" name=\"txdelayms\" value=\"")+txdelayms+F("\" maxlength=\"30\" size=\"31\" min=\"0\" max=\"1000\"> millisecond(s)<br>"
   "<hr>"
   "<b>Safe Mode:</b><br>"
   "<small>Enable to reboot the device after every capture.<br>Disable to avoid missing quick consecutive captures such as keypad entries.</small><br>"
@@ -1019,7 +1038,7 @@ void ListLogs(){
   String freespace;
   freespace=fs_info.totalBytes-fs_info.usedBytes;
   Dir dir = SPIFFS.openDir(directory);
-     String FileList = String()+F("<!DOCTYPE HTML><html>")+css("ESP-RFID-Tool-v2 - Logs")+"<body><button onclick=\"window.location.href='/'\"><- BACK TO INDEX</button><br><small>NOTE: Larger log files will need to be downloaded instead of viewed from the browser.</small><br><table border='1'><tr><td><b>Display File Contents</b></td><td><b>Size in Bytes</b></td><td><b>Download File</b></td><td><b>Delete File</b></td></tr>";
+     String FileList = String()+F("<!DOCTYPE HTML><html>")+css("ESP-RFID-Tool-v2 - Logs")+"<body><button onclick=\"window.location.href='/'\"><- BACK TO INDEX</button><br><br><table border='1'><tr><td><b>Display File Contents</b></td><td><b>Size in Bytes</b></td><td><b>Download File</b></td><td><b>Delete File</b></td></tr>";
   while (dir.next()) {
     String FileName = dir.fileName();
     File f = dir.openFile("r");
@@ -1044,7 +1063,7 @@ bool RawFile(String rawfile) {
 }
 
 void ViewLog(){
-  webString="";
+/*  webString="";
   String payload;
   String ShowPL;
   payload += server.arg(0);
@@ -1067,7 +1086,7 @@ void ViewLog(){
     "</FORM>"
     "<small>Use commas to separate the binary for transmitting multiple packets(useful for sending multiple keypresses for imitating keypads)</small><br>"
     "<hr>"
-    "<a href=\"")+payload+F("\"><button>Download File</button><a><small> - </small><a href=\"/deletelog?payload=")+payload+F("\"><button>Delete File</button></a>"
+    "<a href=\"")+payload+F("\"><button>Download File</button><a><a href=\"/deletelog?payload=")+payload+F("\"><button>Delete File</button></a>"
     "<pre>")
     +payload+
     F("\n"
@@ -1078,6 +1097,57 @@ void ViewLog(){
     ;
   webString="";
   server.send(200, "text/html", ShowPL);
+*/
+
+  String payload;
+  payload += server.arg(0);
+  File f = SPIFFS.open(payload, "r");
+
+
+  if (f) {
+      server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+      server.sendHeader("Pragma", "no-cache");
+      server.sendHeader("Expires", "-1");
+      server.setContentLength(CONTENT_LENGTH_UNKNOWN);
+      server.send(200, "text/html","");
+      server.sendContent(String()+F(
+    "<!DOCTYPE HTML><html>")+css("ESP-RFID-Tool-v2 - View Logs")+F("<body><button onclick=\"window.location.href='/'\"><- BACK TO INDEX</button><br>"
+    "<button onclick=\"window.location.href='/logs'\">List Exfiltrated Data</button>"
+    "<button onclick=\"window.location.href='/experimental'\">TX Mode</button>"
+    "<button onclick=\"window.location.href='/data-convert'\">Data Conversion Tools</button>"
+
+    "<FORM action=\"/api/tx/bin\" id=\"api_tx\" method=\"get\"  target=\"_blank\">"
+      "<small>Binary: </small><INPUT form=\"api_tx\" type=\"text\" name=\"binary\" value=\"\" pattern=\"[01,]{1,}\" required title=\"Allowed characters(0,1,\",\"), must not be empty\" minlength=\"1\" size=\"52\"> "
+      "<INPUT form=\"api_tx\" type=\"submit\" value=\"Transmit\"><br>"
+      "<small>Pulse Width: </small><INPUT form=\"api_tx\" type=\"number\" name=\"pulsewidth\" value=\"40\" minlength=\"1\" min=\"0\" size=\"8\"><small>us</small> "
+      "<small>Data Interval: </small><INPUT form=\"api_tx\" type=\"number\" name=\"interval\" value=\"2000\" minlength=\"1\" min=\"0\" size=\"8\"><small>us</small> "
+      "<small>Delay Between Packets: </small><INPUT form=\"api_tx\" type=\"number\" name=\"wait\" value=\"100000\" minlength=\"1\" min=\"0\" size=\"8\"><small>us</small><br>"
+      "<INPUT form=\"api_tx\" type=\"hidden\" name=\"prettify\" id=\"prettify\" value=\"1\">"
+    "</FORM>"
+    "<small>Use commas to separate the binary for transmitting multiple packets(useful for sending multiple keypresses for imitating keypads)</small><br>"
+    "<hr>"
+    "<a href=\"")+payload+F("\"><button>Download File</button><a><a href=\"/deletelog?payload=")+payload+F("\"><button>Delete File</button></a>"
+    "<pre>")
+    +payload+
+    F("\n"
+    "Note: Preambles shown are only a guess based on card length and may not be accurate for every card format.\n"
+    "-----\n"));
+  
+    while (f.available()) {
+      char buffer[64];
+      int bytesRead = f.readBytes(buffer, sizeof(buffer));
+
+      buffer[bytesRead] = '\0';  // Nullterminator hinzufügen
+      String sanitizedBuffer = sanitizeString(buffer, bytesRead);
+      server.sendContent(sanitizedBuffer);
+        //server.sendContent(String(buffer));  // Füge den Puffer zum Antwortinhalt hinzu
+        }
+    f.close();
+    server.sendContent(F("---END-OF-LOGFILE---\n"));
+    server.sendContent(F("</body></html>")); // html closing
+    server.sendContent(F("")); // this tells web client that transfer is done
+    server.client().stop();
+  }
 }
 
 // Start Networking
@@ -1132,7 +1202,7 @@ void setup() {
     //"<a href=\"/status\">Device and Wiring Status</a><br>-<br>"
     "<button onclick=\"window.location.href='/status'\">Device and Wiring Status</button>"
     "<button onclick=\"window.location.href='/logs'\">List Exfiltrated Data</button>"
-    "<button onclick=\"window.location.href='/experimental'\">Experimental TX Mode</button>"
+    "<button onclick=\"window.location.href='/experimental'\">TX Mode</button>"
     "<button onclick=\"window.location.href='/data-convert'\">Data Conversion Tools</button>"
     "<button onclick=\"window.location.href='/settings'\">Configure Settings</button>"
     "<button onclick=\"window.location.href='/format'\">Format File System</button>"
@@ -1238,7 +1308,7 @@ void setup() {
       return server.requestAuthentication();
     String deletelog;
     deletelog += server.arg(0);
-    if (!deletelog.startsWith("/payloads/")) server.send(200, "text/html", String()+F("<a href=\"/\"><- BACK TO INDEX</a><br><br><a href=\"/logs\">List Exfiltrated Data</a><br><br>Deleting file: ")+deletelog);
+    if (!deletelog.startsWith("/payloads/")) server.send(200, "text/html", String()+F("<!DOCTYPE HTML><html>")+css("ESP-RFID-Tool-v2 - Delete Log")+F("<body><button onclick=\"window.location.href='/'\"><- BACK TO INDEX</button><br><br><a href=\"/logs\">List Exfiltrated Data</a><br><br>Deleting file: ")+deletelog);
     delay(50);
     SPIFFS.remove(deletelog);
   });
@@ -1408,7 +1478,7 @@ void setup() {
 
   server.on("/stoptx/yes", [](){
     TXstatus=0;
-    server.send(200, "text/html", String()+F("<!DOCTYPE HTML><html>")+css("ESP-RFID-Tool-v2 - Stop TX")+F("<body><button onclick=\"window.location.href='/'\"><- BACK TO INDEX</button><br><br><a href=\"/experimental\"><- BACK TO EXPERIMENTAL TX MODE</a><br><br>All transmissions have been stopped."));
+    server.send(200, "text/html", String()+F("<!DOCTYPE HTML><html>")+css("ESP-RFID-Tool-v2 - Stop TX")+F("<body><button onclick=\"window.location.href='/'\"><- BACK TO INDEX</button><br><br><a href=\"/experimental\"><- BACK TO TX MODE</a><br><br>All transmissions have been stopped."));
   });
 
   server.on("/experimental", [](){
@@ -1464,8 +1534,7 @@ void setup() {
       }
 
       if (server.hasArg("bruteSTART")) {
-        server.send(200, "text/html", String()+F("<!DOCTYPE HTML><html>")+css("ESP-RFID-Tool-v2 - TX Mode")+F("<body><button onclick=\"window.location.href='/'\"><- BACK TO INDEX</button><br><a href=\"/experimental\"><- BACK TO EXPERIMENTAL TX MODE</a><br><br>Brute forcing ")+pinBITS+F("bit Wiegand Format PIN from ")+(server.arg("bruteSTART"))+F(" to ")+(server.arg("bruteEND"))+F(" with a ")+pinHTMLDELAY+F("ms delay between \"keypresses\"<br>This may take a while, your device will be busy until the sequence has been completely transmitted!<br>Please \"STOP CURRENT TRANSMISSION\" before attempting to use your device or simply wait for the transmission to finish.<br>You can view if the brute force attempt has completed by returning to the Experimental TX page and checking the status located under \"Transmit Status\"<br><br><a href=\"/stoptx\"><button>STOP CURRENT TRANSMISSION</button></a>"));
- //       server.send(200, "text/html", String()+"<a href=\"/\"><- BACK TO INDEX</a><br><br><a href=\"/experimental\"><- BACK TO EXPERIMENTAL TX MODE</a><br><br>Brute forcing "+pinBITS+"bit Wiegand Format PIN from "+(server.arg("bruteSTART"))+" to "+(server.arg("bruteEND"))+" with a "+pinHTMLDELAY+"ms delay between \"keypresses\"<br>This may take a while, your device will be busy until the sequence has been completely transmitted!<br>Please \"STOP CURRENT TRANSMISSION\" before attempting to use your device or simply wait for the transmission to finish.<br>You can view if the brute force attempt has completed by returning to the Experimental TX page and checking the status located under \"Transmit Status\"<br><br><a href=\"/stoptx\"><button>STOP CURRENT TRANSMISSION</button></a>");
+        server.send(200, "text/html", String()+F("<!DOCTYPE HTML><html>")+css("ESP-RFID-Tool-v2 - TX Mode")+F("<body><button onclick=\"window.location.href='/'\"><- BACK TO INDEX</button><br><a href=\"/experimental\"><- BACK TO TX MODE</a><br><br>Brute forcing ")+pinBITS+F("bit Wiegand Format PIN from ")+(server.arg("bruteSTART"))+F(" to ")+(server.arg("bruteEND"))+F(" with a ")+pinHTMLDELAY+F("ms delay between \"keypresses\"<br>This may take a while, your device will be busy until the sequence has been completely transmitted!<br>Please \"STOP CURRENT TRANSMISSION\" before attempting to use your device or simply wait for the transmission to finish.<br>You can view if the brute force attempt has completed by returning to the TX page and checking the status located under \"Transmit Status\"<br><br><a href=\"/stoptx\"><button>STOP CURRENT TRANSMISSION</button></a>"));
         delay(50);
       }
 
@@ -1749,11 +1818,11 @@ void setup() {
         server.send(200, "text/html", String()+
         +F("<!DOCTYPE HTML><html>")+css("ESP-RFID-Tool-v2 - TX Mode")+F("<body><button onclick=\"window.location.href='/'\"><- BACK TO INDEX</button><br>"
        // "<a href=\"/\"><- BACK TO INDEX</a><br><br>"
-        "<a href=\"/experimental\"><- BACK TO EXPERIMENTAL TX MODE</a><br><br>"
+        "<a href=\"/experimental\"><- BACK TO TX MODE</a><br><br>"
         "Denial of Service mode active.<br>Transmitting D0 and D1 bits simultaneously until stopped."
         "<br>This may take a while, your device will be busy until the sequence has been completely transmitted!"
         "<br>Please \"STOP CURRENT TRANSMISSION\" before attempting to use your device or simply wait for the transmission to finish.<br>"
-        "You can view if the fuzzing attempt has completed by returning to the Experimental TX page and checking the status located under \"Transmit Status\"<br><br>"
+        "You can view if the fuzzing attempt has completed by returning to the TX page and checking the status located under \"Transmit Status\"<br><br>"
         "<a href=\"/stoptx\"><button>STOP CURRENT TRANSMISSION</button></a>"));
         delay(50);
       }
@@ -1762,11 +1831,11 @@ void setup() {
         server.send(200, "text/html", String()+
         +F("<!DOCTYPE HTML><html>")+css("ESP-RFID-Tool-v2 - TX Mode")+F("<body><button onclick=\"window.location.href='/'\"><- BACK TO INDEX</button><br>"
         //"<a href=\"/\"><- BACK TO INDEX</a><br><br>"
-        "<a href=\"/experimental\"><- BACK TO EXPERIMENTAL TX MODE</a><br><br>"
+        "<a href=\"/experimental\"><- BACK TO TX MODE</a><br><br>"
         "Transmitting D0 and D1 bits simultaneously ")+fuzzTimes+F(" times."
         "<br>This may take a while, your device will be busy until the sequence has been completely transmitted!"
         "<br>Please \"STOP CURRENT TRANSMISSION\" before attempting to use your device or simply wait for the transmission to finish.<br>"
-        "You can view if the fuzzing attempt has completed by returning to the Experimental TX page and checking the status located under \"Transmit Status\"<br><br>"
+        "You can view if the fuzzing attempt has completed by returning to the TX page and checking the status located under \"Transmit Status\"<br><br>"
         "<a href=\"/stoptx\"><button>STOP CURRENT TRANSMISSION</button></a>"));
         delay(50);
       }
@@ -1820,11 +1889,11 @@ void setup() {
         server.send(200, "text/html", String()+
         +F("<!DOCTYPE HTML><html>")+css("ESP-RFID-Tool-v2 - TX Mode")+F("<body><button onclick=\"window.location.href='/'\"><- BACK TO INDEX</button><br>"
         //"<a href=\"/\"><- BACK TO INDEX</a><br><br>"
-        "<a href=\"/experimental\"><- BACK TO EXPERIMENTAL TX MODE</a><br><br>"
+        "<a href=\"/experimental\"><- BACK TO TX MODE</a><br><br>"
         "Denial of Service mode active.<br>Transmitting bits alternating between D0 and D1 until stopped."
         "<br>This may take a while, your device will be busy until the sequence has been completely transmitted!"
         "<br>Please \"STOP CURRENT TRANSMISSION\" before attempting to use your device or simply wait for the transmission to finish.<br>"
-        "You can view if the fuzzing attempt has completed by returning to the Experimental TX page and checking the status located under \"Transmit Status\"<br><br>"
+        "You can view if the fuzzing attempt has completed by returning to the TX page and checking the status located under \"Transmit Status\"<br><br>"
         "<a href=\"/stoptx\"><button>STOP CURRENT TRANSMISSION</button></a>"));
         delay(50);
       }
@@ -1833,11 +1902,11 @@ void setup() {
         server.send(200, "text/html", String()+
         +F("<!DOCTYPE HTML><html>")+css("ESP-RFID-Tool-v2 - TX Mode")+F("<body><button onclick=\"window.location.href='/'\"><- BACK TO INDEX</button><br>"
         //"<a href=\"/\"><- BACK TO INDEX</a><br><br>"
-        "<a href=\"/experimental\"><- BACK TO EXPERIMENTAL TX MODE</a><br><br>"
+        "<a href=\"/experimental\"><- BACK TO TX MODE</a><br><br>"
         "Transmitting ")+fuzzTimes+F(" bits alternating between D0 and D1."
         "<br>This may take a while, your device will be busy until the sequence has been completely transmitted!"
         "<br>Please \"STOP CURRENT TRANSMISSION\" before attempting to use your device or simply wait for the transmission to finish.<br>"
-        "You can view if the fuzzing attempt has completed by returning to the Experimental TX page and checking the status located under \"Transmit Status\"<br><br>"
+        "You can view if the fuzzing attempt has completed by returning to the TX page and checking the status located under \"Transmit Status\"<br><br>"
         "<a href=\"/stoptx\"><button>STOP CURRENT TRANSMISSION</button></a>"));
         delay(50);
       }
@@ -1940,7 +2009,7 @@ void setup() {
       //"<!DOCTYPE HTML>"
       //"<html>"
       //"<head>"
-      //"<title>Experimental TX Mode</title>"
+      //"<title>TX Mode</title>"
       //"</head>"
       "<body>"
       )+experimentalStatus+"<br><br>"
@@ -1948,10 +2017,10 @@ void setup() {
       "<b>Transmit Status:</b> ")+activeTX+F("<br><br>"
       //"<a href=\"/\"><- BACK TO INDEX</a><br>"
       "<P>"
-      "<h1>Experimental TX Mode</h1>"
+      "<h1>TX Mode</h1>"
       "<hr>"
       "<small>"
-      "<b>Warning:</b> This mode is highly experimental, use at your own risk!<br>"
+      "<b>Warning:</b> Use this mode at your own risk!<br>"
       "Note: Timings for the Wiegand Data Pulse Width and Wiegand Data Interval may be changed on the settings page."
       "</small>"
       "<br>"

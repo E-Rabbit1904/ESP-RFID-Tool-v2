@@ -100,3 +100,18 @@ String reverseHex(String hexString) {
 
   return reversedHex;
 }
+
+
+String sanitizeString(char* buffer, int length) {
+  String result = "";
+  for (int i = 0; i < length; i++) {
+    // Überprüfe, ob das Zeichen gültig ist (z.B. im ASCII-Bereich)
+    if (buffer[i] >= 10 && buffer[i] <= 126) {
+      result += buffer[i];
+    } else {
+      // Andernfalls ersetze es durch ein Platzhalterzeichen oder entferne es
+      result += "";
+    }
+  }
+  return result;
+}

@@ -4,6 +4,8 @@ Forked by Raik Schneider aka Einstein2150
 Original Software by Corey Harding  
   
 ![Logo](Images/logo.png?raw=true)  
+
+<img src="Images/web_frontend.jpeg" alt="Frontend" width="300"/>
   
   * ESP-RFID-Tool-v2: https://github.com/Einstein2150/ESP-RFID-Tool-v2/releases  
   * Releases are compiled with esp8266 board manager package 2.4.0  
@@ -14,22 +16,27 @@ Original Software by Corey Harding
   * modern user interface
   * optimised for mobile devices (i.e. bigger buttons than small textlinks)
 
-### better replay
+### replay 2.0
   * MOSFET's ground the DATA-lines while **replaying data more stable than the original board** can do
+  * new **direct-replay-feature** in the log. Pick your capture and replay it with one click! (field-tested with Wiegand-34bit and keypad)
 
 ### Status page  
-  * new status-page with useful informations:
+  * new **status-page** with useful informations:
    * 	Wiegand-wiring-check
    *   Device Uptime
    *   Memory informations
   
 ### Hex-Magic in captured data
-  * the captured data-analysing is improved because the original firmware builds the HEX in the logfile with the unnecessary Wiegand control-bits
   * the logfile now lists the **cleaned HEX of the card** (free of control bits-data)
   * for **RFID-cards the UID is calculated** and printed in the log. This makes the creation of clonecards more easy
 
 ## schematic and wiring for board-v2 (based on nodemcu)  
-* board-v2 could be easily build by yourself
+* board-v2 could be easily build by yourself:
+
+<img src="Images/board-v2 top.png" alt="Frontend" width="300"/>
+<img src="Images/board-v2 back.png" alt="Frontend" width="300"/>
+<img src="Images/board-v2 uncovered.png" alt="Frontend" width="300"/>
+
 * it has an additional voltage regulator for higher voltage
 * board-v2 uses 2 MOSFET (i.e. 2N7000) for replay-attacks which makes the ability of stronger comunication because the Wiegand datalines get strong grounded
 *  you can use the ESP-RFID-Tool-v2 firmware on the original board from Corey Harding but it wouldn't have the improvements because they relie on additional hardware.
@@ -73,9 +80,8 @@ Access to the log files and various settings is provided via a web based interfa
 ## I want to know a little more...
 The hardware is based on an ESP12 WiFi chip with a full TCP/IP stack and Microcontroller Unit. The software is open source licensed under the MIT License and will be released the day the product is launched. The software will reside in this GitHub repo so it may be reviewed by the community. We will accept various pull requests from the community after being reviewed if it improves the value of the device for others. The software was written in the Arduino IDE so both hobbyist and professionals will have no issue modifying the code if they so choose.  A Wiegand Interface operates using 3 wires, a ground, Data0, and Data1. A zero is sent when D0 goes low and a one is sent when D1 goes low, the other line remains high during this time. The timing is 40uS from low to high on a line with 2mS between bits. The software logs this binary output to a file and if the device thinks it is a known card format the preamble is guessed(not sent by card reader but it is the same for all cards of a specific format, our primary target is 26-37bit HID cards) and both the raw binary and hexadecimal data is logged. For unkown card formats only the raw binary output is logged with no guess at the preamble and without showing the data in hexadecimal format to prevent confusion. If you know what kind of card was captured, simply look up the preamble and add it to the beginning of the binary then typically convert it to hexadecimal format to make a clone of a card. It is possible the card is actually an unknown format and the preamble was guessed incorrectly with the device thinking it was a known card format(the guess is based on the bit count output by the reader), if this is the case in the log file there is a literal space in the binary between the preamble and the card data, simply ignore the preamble. When replaying a captured credential*(see note below) you do not include the preamble as that is not output by the card reader but instead you only replay*(see note below) the actual card data as output from the reader. You only need to worry about the preamble if making a clone of a card. The primary function of this device is for logging the raw binary data as output from a Wiegand Interface. You can read from 1 bit all the way up to 4,096 bits. The default buffer setting only allows 52 bits and must be manually increased from the settings page accessible from the web interface.  
   
-## *Experimental TX Mode  
-The device was made with minimal hardware to keep costs extremely low and in reach of hobbyist and also so security professionals can buy multiple units and also use them without the fear of losing a unit. This being said there are no level shifters on the board.(It is possible that in the future a PRO version may be released) This means that with the current hardware the device can work with a 3V3 Wiegand Interface as well as a 5V Wiegand interface because the hardware operates at 3V3 and is also 5V tolerant. The drawback of this is that not all 5V Wiegand controllers are guaranteed to be triggered when replaying or fuzzing data because only 3V3 is output from the device. There is also a risk when the device is in TX mode and the output goes low for 40uS, if the device were to also receive data during this time there will be a short. For this reason be sure that absoulutely no cards are being scanned while the device is in TX mode. The device does not go into TX mode until you press on a form submit button and as soon as the data is done being transmitted it goes back into listening mode. For the reasons above TX mode is for experimental use only and was designed primarily for easily debugging the software when making changes.(two units were tied together)  
-**Use transmit mode at your own risk, it is not officially supported. Consider it a bonus in the software.**  
+## TX Mode  
+With the board-v2 you can transmit Wiegand-data with full power because the MOSFETs drop the data-lines hard to ground. But be aware. There is a risk when the device is in TX mode and the output goes low. If the device is also receiving data during this time there will be a short. For this reason be sure that absoulutely no cards are being scanned while the device is in TX mode. The device does not go into TX mode until you press on a form submit button and as soon as the data is done being transmitted it goes back into listening mode. 
   
 ## **Installation Notes  
 [Click here for wiring diagrams](Installation-Schematics/README.md)  
@@ -85,12 +91,13 @@ The device was made with minimal hardware to keep costs extremely low and in rea
 * Connect D1 on device to D1 on reader  
 * Connect + on device to + on reader  
 * Connect - on device to - on reader  
-  * The ESP-RFID-Tool accepts 4.5-12v but you must also be sure to supply enough voltage and current to power your reader if creating a standalone or portable unit.  
-  * SAFETY: It has come to my attention that the voltage regulator used on the commercially available units that you may find for sale is different than the voltage regulator I originally chose for this project.  Also due to global chip shortages and the possibility of manufacturers substituting components I am downgrading the absolute maximum voltage rating to 12v as in you may be stressing the unit to its limits at this voltage and extra care should be taken.  Most of my smaller portable prototypes ran at around 9v(x6 AA Batteries) and I found this to be more than adequate, remember that you can always power your reader and the RFID-Tool unit separately if needed and I suggest supplying your project with the lowest possible voltage that you can get away with.  In fact, I have found multiple readers that run just fine at less than the recommended voltage.  Note that I did not notice a significant range increase in my original testing between supplying 12v and 24v to my reader(I do not recommend this as I tend to abuse the specs for what I am testing, and I was using a different voltage regulator in my prototype).  Also be advised that most commonly used batteries produce more than the commonly stated nominal voltage at a full charge.  It may also be a good idea to apply a heatsink to your voltage regulator especially if you notice that the unit runs hot at your chosen voltage.  It is also never recommended to leave your device unattended.  Please be safe and take all necessary safety precautions when testing your setup.  
-  * OPTIONAL: Connect 4.5-12v battery into the same + and -(only if building a portable unit, do not add a battery if implanting device into an existing installation, or if you do use a battery do not connect the + wire from the existing installation to your device, only tie in the GND -)  
-  * NOTE: At a minimum D0, D1, and GND(-) must be connected to the reader for proper function, no matter the power source.  
-* Configure settings  
-  * See Below  
+
+* The ESP-RFID-Tool-v2 based on nodemcu with an external 5v voltage regulator accepts 7-25v
+* If you use the external 3.3v voltage regulator you should not exceed 15v
+
+* At a minimum D0, D1, and GND(-) must be connected to the reader for proper function, no matter the power source.
+* You can check the wiring on the status-page of the device   
+
   
 ## Making Sense of the Binary Data  
 [Keypads](Keypad/README.md)  
